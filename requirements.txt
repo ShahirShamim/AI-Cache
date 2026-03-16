@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sentence-transformers
+chromadb
+httpx
+streamlit
+pandas
+plotly
+sqlalchemy

@@ -1,0 +1,27 @@
+# The 'version' attribute is obsolete in modern docker-compose, but kept for compatibility.
+version: '3.8'
+
+services:
+  semantic-cache-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    volumes:
+      - app_data:/app/data
+    env_file:
+      - .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # It's good practice to name the container
+    container_name: semantic-cache-gateway
+
+volumes:
+  app_data:

@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Docker
+# The persistent data should not be in git
+chroma_cache/
+metrics.db
+data/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
