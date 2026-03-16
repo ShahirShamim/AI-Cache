@@ -18,22 +18,22 @@ The gateway intercepts every incoming request and follows a "cache-or-call" logi
 
 ```mermaid
 graph TD
-    A[Client] -->|1. POST /v1/chat/completions| B(Semantic Cache Gateway);
+    A[Client] -->|POST /v1/chat/completions| B(Semantic Cache Gateway);
     subgraph Gateway Logic
-        B -->|2. Generate Embedding| C(SentenceTransformer);
-        C -->|3. Query ChromaDB| D{Vector DB};
-        D -->|4. Similarity > Threshold?| E{Cache Decision};
+        B -->|Generate Embedding| C(SentenceTransformer);
+        C -->|Query ChromaDB| D{Vector DB};
+        D -->|Similarity > Threshold?| E{Cache Decision};
     end
     E -->|Yes (Cache Hit)| F[Return Cached Response];
-    F -->|~50ms| A;
+    F -->|Fast Response| A;
     E -->|No (Cache Miss)| G[Forward to Downstream LLM];
     subgraph Backend LLM
         G --> H[Ollama / OpenWebUI];
     end
-    H -->|5. Generate Response| G;
-    G -->|6. Store New Entry in DB| D;
-    G -->|7. Return LLM Response| I[Return New Response];
-    I -->|~2s+| A;
+    H -->|Generate Response| G;
+    G -->|Store New Entry in DB| D;
+    G -->|Return LLM Response| I[Return New Response];
+    I -->|Slow Response| A;
 
     style F fill:#d4edda,stroke:#155724,color:#155724
     style I fill:#f8d7da,stroke:#721c24,color:#721c24
