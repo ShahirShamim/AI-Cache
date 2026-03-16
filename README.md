@@ -17,31 +17,48 @@ The entire application, including the gateway, databases, and an analytics dashb
 The gateway intercepts every incoming request and follows a "cache-or-call" logic based on the semantic meaning of the user's prompt.
 
 ```mermaid
-graph TD
-    A[Client] -->|POST /v1/chat/completions| B(Semantic Cache Gateway)
+graph LR
+    %% Node Definitions
+    User([fa:fa-user User/Client])
+    Gateway{{"⚡ Semantic Gateway"}}
+    Embed(Generate Embedding)
+    VectorDB[(ChromaDB)]
+    LLM[fa:fa-robot Downstream LLM]
     
-    subgraph Gateway Logic
-        B --> C(Generate Embedding)
-        C --> D{Query ChromaDB}
-        D --> E{Similarity > Threshold?}
+    %% Style Classes
+    classDef cacheHit fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef cacheMiss fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef success fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px;
+    classDef failure fill:#ffcdd2,stroke:#c62828,stroke-width:2px;
+
+    %% Main Flow
+    User -->|POST /v1/chat| Gateway
+    
+    subgraph Logic ["Logic & Search"]
+        Gateway --> Embed
+        Embed --> VectorDB
     end
 
-    E -->|Yes: Cache Hit| F[Return Cached Response]
-    F --> A
+    %% Decision Path
+    VectorDB -- "Similarity > 0.9" --> Hit[fa:fa-bolt Cache Hit]
+    VectorDB -- "Similarity < 0.9" --> Miss[fa:fa-clock Cache Miss]
 
-    E -->|No: Cache Miss| G[Forward to Downstream LLM]
+    %% Response Paths
+    Hit -->|Fast Response| User
     
-    subgraph Backend LLM
-        G --> H[Ollama / OpenWebUI]
+    subgraph External ["Remote API"]
+        Miss --> LLM
+        LLM --> Save[Update Vector DB]
+        Save -.-> VectorDB
     end
+    
+    LLM -->|Slow Response| User
 
-    H --> G
-    G -->|Store New Entry| D
-    G --> I[Return New Response]
-    I --> A
-
-    style F fill:#d4edda,stroke:#155724,color:#155724
-    style I fill:#f8d7da,stroke:#721c24,color:#721c24
+    %% Applying Styles
+    class Hit success;
+    class Miss failure;
+    class Gateway cacheHit;
+    class LLM cacheMiss;
 ```
 
 ---
